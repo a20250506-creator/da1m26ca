@@ -18,19 +18,25 @@
       background-color: #030206;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
+/* Configuración para teléfonos celulares (pantallas verticales) */
+@media (max-width: 768px) and (orientation: portrait) {
+  .canvas-container {
+    /* Ajuste de origen para encuadrar la cabaña en vista vertical */
+    transform-origin: 32% 84%;
+  }
 
-    /* Contenedor principal con efecto de zoom */
-   /* Ajuste de enfoque centrado exactamente en la cabaña */
-.canvas-container {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
-  transform-origin: 31% 83%; /* Centrado preciso en la cabaña y porche */
-  transition: transform 4s cubic-bezier(0.25, 1, 0.5, 1);
+  .canvas-container.zoomed {
+    /* Zoom mayor para que la cabaña se vea grande y clara en celular */
+    transform: scale(4.2);
+  }
+
+  /* Carta adaptable para pantallas pequeñas */
+  .letter-card {
+    width: 88%;
+    padding: 25px 20px;
+    font-size: 0.95rem;
+  }
 }
-
-
-
     svg {
       width: 100%;
       height: 100%;
