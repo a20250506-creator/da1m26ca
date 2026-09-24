@@ -18,25 +18,36 @@
       background-color: #030206;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
-/* Configuración para teléfonos celulares (pantallas verticales) */
-@media (max-width: 768px) and (orientation: portrait) {
-  .canvas-container {
-    /* Ajuste de origen para encuadrar la cabaña en vista vertical */
-    transform-origin: 32% 84%;
-  }
 
-  .canvas-container.zoomed {
-    /* Zoom mayor para que la cabaña se vea grande y clara en celular */
-    transform: scale(4.2);
-  }
+    .canvas-container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-origin: 32% 84%;
+      transition: transform 3.5s cubic-bezier(0.25, 1, 0.5, 1);
+    }
 
-  /* Carta adaptable para pantallas pequeñas */
-  .letter-card {
-    width: 88%;
-    padding: 25px 20px;
-    font-size: 0.95rem;
-  }
-}
+    .canvas-container.zoomed {
+      transform: scale(3.2);
+    }
+
+    /* Ajustes específicos para móviles */
+    @media (max-width: 768px) and (orientation: portrait) {
+      .canvas-container {
+        transform-origin: 32% 84%;
+      }
+
+      .canvas-container.zoomed {
+        transform: scale(4.2);
+      }
+
+      .letter-card {
+        width: 88%;
+        padding: 25px 20px;
+        font-size: 0.95rem;
+      }
+    }
+
     svg {
       width: 100%;
       height: 100%;
@@ -72,20 +83,44 @@
       100% { transform: translateY(0px) scale(1); }
     }
 
-    /* Personaje */
+    /* Personaje y animación de salida/caminata con pisada firme */
     .character-group {
       opacity: 0;
-      transform: translateY(15px);
-      transition: opacity 1.5s ease, transform 1.5s ease;
+      transform: translateX(-15px);
+      transition: opacity 1s ease;
       cursor: pointer;
     }
 
     .character-group.visible {
       opacity: 1;
-      transform: translateY(0);
+      animation: walkIn 2.2s cubic-bezier(0.25, 1, 0.5, 1) forwards, idleBreathe 3s ease-in-out 2.2s infinite alternate;
     }
 
-    /* Sobre flotante/pulsante */
+    /* Simulación de caminata dando pasos firmes en el porche */
+    @keyframes walkIn {
+      0% {
+        transform: translateX(-15px) translateY(0px);
+      }
+      25% {
+        transform: translateX(-10px) translateY(-1.5px);
+      }
+      50% {
+        transform: translateX(-5px) translateY(0px);
+      }
+      75% {
+        transform: translateX(-2px) translateY(-1.5px);
+      }
+      100% {
+        transform: translateX(0px) translateY(0px);
+      }
+    }
+
+    @keyframes idleBreathe {
+      0% { transform: translateY(0px); }
+      100% { transform: translateY(-1px); }
+    }
+
+    /* Sobre flotante/pulsante con brillo dorado */
     .envelope {
       animation: pulseEnvelope 1.2s infinite alternate ease-in-out;
       transform-origin: center;
@@ -96,37 +131,55 @@
       100% { transform: scale(1.3); filter: drop-shadow(0 0 8px #fff2a8); }
     }
 
-    /* Flores (ocultas al inicio) */
-    .flowers {
+    /* Ocultar el sobre al sembrar */
+    .character-group.planting .envelope {
+      display: none;
+    }
+
+    /* Inclinación del personaje para sembrar */
+    .character-group.planting {
+      animation: none;
+      transform: translateY(2px) rotate(8deg);
+      transform-origin: bottom center;
+      transition: transform 0.6s ease;
+    }
+
+    /* Animación de brote de flores con rebote sutil */
+    .planted-flowers {
       opacity: 0;
       transform: scale(0);
-      transform-origin: center;
-      transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transform-origin: 415px 715px;
+      transition: opacity 0.8s ease, transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
-/* Ocultar el sobre al terminar */
-.character-group.planting .envelope {
-  display: none;
-}
 
-/* Inclinación suave del personaje para sembrar */
-.character-group.planting {
-  transform: translateY(2px) rotate(8deg);
-  transform-origin: bottom center;
-  transition: transform 0.6s ease;
-}
+    .character-group.planting .planted-flowers {
+      opacity: 1;
+      transform: scale(1);
+    }
 
-/* Animación de brote de las flores en la tierra */
-.planted-flowers {
-  opacity: 0;
-  transform: scale(0);
-  transform-origin: 415px 715px;
-  transition: opacity 0.8s ease, transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
+    /* Partículas mágicas que flotan suavemente */
+    .magic-particle {
+      animation: particleFloat 4s infinite ease-in-out alternate;
+    }
 
-.character-group.planting .planted-flowers {
-  opacity: 1;
-  transform: scale(1);
-}
+    @keyframes particleFloat {
+      0% { transform: translateY(0) translateX(0); opacity: 0.3; }
+      50% { opacity: 0.8; }
+      100% { transform: translateY(-12px) translateX(6px); opacity: 0.2; }
+    }
+
+    /* Humo suave de la chimenea */
+    .smoke-particle {
+      animation: smokeRise 5s infinite linear;
+      transform-origin: center;
+    }
+
+    @keyframes smokeRise {
+      0% { transform: translateY(0) scale(0.8); opacity: 0; }
+      30% { opacity: 0.4; }
+      100% { transform: translateY(-40px) scale(2.2); opacity: 0; }
+    }
+
     /* Modal de la Carta */
     .modal-overlay {
       position: fixed;
@@ -241,7 +294,6 @@
           <stop offset="100%" stop-color="#e67e22"/>
         </radialGradient>
 
-        <!-- Filtro para el brillo cálido de las ventanas y farol -->
         <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
           <feGaussianBlur stdDeviation="6" result="blur" />
           <feComposite in="SourceGraphic" in2="blur" operator="over" />
@@ -261,7 +313,7 @@
         <circle cx="1020" cy="90" r="1.5"/>
       </g>
 
-      <!-- SOL Y RESPLANDOR (Animado) -->
+      <!-- SOL Y RESPLANDOR -->
       <g class="sun-group">
         <circle cx="1020" cy="310" r="120" fill="url(#sunGlow)"/>
         <circle cx="1020" cy="310" r="28" fill="#fffdf0"/>
@@ -294,7 +346,7 @@
         <line x1="910" y1="710" x2="1060" y2="710"/>
       </g>
 
-      <!-- BOSQUE DE SILUETAS AL FONDO -->
+      <!-- BOSQUE DE SILUETAS -->
       <path d="M 0,540 L 0,480 L 15,500 L 30,470 L 50,510 L 70,460 L 90,500 L 120,450 
                L 150,490 L 180,440 L 220,510 L 260,460 L 300,520 L 350,470 L 400,530 
                L 800,530 L 850,480 L 890,510 L 930,460 L 970,500 L 1020,450 L 1080,490 
@@ -304,15 +356,13 @@
       <path d="M -10,620 Q 200,580 450,640 T 900,610 Q 1100,590 1210,630 L 1210,810 L -10,810 Z" fill="#120a14"/>
       <path d="M -10,640 Q 220,600 420,660 T 850,630 Q 1050,600 1210,650 L 1210,810 L -10,810 Z" fill="#0a050b"/>
 
-      <!-- ARBOLES EN PRIMER PLANO (IZQUIERDA) -->
+      <!-- ÁRBOLES EN PRIMER PLANO -->
       <g fill="#08030a">
-        <!-- Árbol Grande -->
         <polygon points="60,670 15,550 110,670"/>
         <polygon points="60,600 25,480 95,600"/>
         <polygon points="60,520 35,410 85,520"/>
         <rect x="53" y="670" width="14" height="40"/>
 
-        <!-- Árbol Mediano -->
         <polygon points="130,680 95,570 165,680"/>
         <polygon points="130,610 105,510 155,610"/>
         <rect x="125" y="680" width="10" height="30"/>
@@ -320,13 +370,14 @@
 
       <!-- CABAÑA DE MADERA -->
       <g id="cabinGroup">
-        <!-- Sombra base -->
-        <ellipse cx="380" cy="725" rx="140" ry="20" fill="#000000" opacity="0.6"/>
+        <!-- Chimenea y Humo -->
+        <rect x="430" y="540" width="16" height="35" fill="#1d0d08"/>
+        <circle cx="438" cy="530" r="4" fill="#ffffff" class="smoke-particle"/>
+        <circle cx="438" cy="520" r="6" fill="#ffffff" class="smoke-particle" style="animation-delay: 1.5s;"/>
 
-        <!-- Estructura Principal (Paredes de Troncos) -->
+        <ellipse cx="380" cy="725" rx="140" ry="20" fill="#000000" opacity="0.6"/>
         <rect x="270" y="610" width="210" height="100" fill="url(#woodGrad)" rx="3"/>
         
-        <!-- Líneas de los troncos -->
         <g stroke="#170a06" stroke-width="2" opacity="0.8">
           <line x1="270" y1="625" x2="480" y2="625"/>
           <line x1="270" y1="640" x2="480" y2="640"/>
@@ -336,67 +387,68 @@
           <line x1="270" y1="700" x2="480" y2="700"/>
         </g>
 
-        <!-- TECHO DE MADERA -->
+        <!-- TECHO -->
         <polygon points="375,520 245,615 505,615" fill="#1d0d08"/>
         <polygon points="375,520 250,610 500,610" fill="#2d1710"/>
-        <!-- Borde del techo iluminado por el amanecer -->
         <polyline points="505,615 375,520" stroke="#f79841" stroke-width="3" fill="none" opacity="0.8"/>
 
-        <!-- BUHARDILLA / VENTANA SUPERIOR -->
+        <!-- BUHARDILLA -->
         <polygon points="375,555 355,575 395,575" fill="#1d0d08"/>
         <rect x="363" y="565" width="24" height="20" fill="url(#woodGrad)"/>
         <rect x="369" y="569" width="12" height="12" fill="url(#windowGlow)" filter="url(#glow)"/>
 
-        <!-- VENTANAS PRINCIPALES ILUMINADAS -->
-        <!-- Ventana Izquierda -->
+        <!-- VENTANAS -->
         <rect x="295" y="635" width="38" height="42" fill="#170a06" rx="2"/>
         <rect x="299" y="639" width="30" height="34" fill="url(#windowGlow)" filter="url(#glow)"/>
-        <!-- Marco de ventana -->
         <path d="M 314,639 L 314,673 M 299,656 L 329,656" stroke="#2d1710" stroke-width="2"/>
 
-        <!-- Ventana Derecha -->
         <rect x="415" y="635" width="38" height="42" fill="#170a06" rx="2"/>
         <rect x="419" y="639" width="30" height="34" fill="url(#windowGlow)" filter="url(#glow)"/>
-        <!-- Marco de ventana -->
         <path d="M 434,639 L 434,673 M 419,656 L 449,656" stroke="#2d1710" stroke-width="2"/>
 
-        <!-- PUERTA DE ENTRADA -->
+        <!-- PUERTA -->
         <rect x="355" y="640" width="40" height="70" fill="#180b07" rx="2"/>
         <rect x="359" y="644" width="32" height="66" fill="#28130c"/>
         <circle cx="365" cy="678" r="2.5" fill="#e67e22"/>
 
-        <!-- PORCHE / PLATAFORMA DE MADERA -->
+        <!-- PORCHE -->
         <rect x="255" y="705" width="240" height="12" fill="#24120b"/>
         <rect x="255" y="717" width="240" height="4" fill="#0f0603"/>
 
-        <!-- LUZ DEL FAROL EN EL PORCHE -->
+        <!-- FAROL -->
         <circle cx="348" cy="648" r="4" fill="#fffbe6" filter="url(#glow)"/>
       </g>
 
-      <!-- PERSONAJE EN EL PORCHE (Animado) -->
+      <!-- LUCIÉRNAGAS / POLVO MÁGICO EN EL AIRE -->
+      <g fill="#ffe082">
+        <circle cx="370" cy="660" r="1.5" class="magic-particle" style="animation-delay: 0s;"/>
+        <circle cx="410" cy="680" r="1.2" class="magic-particle" style="animation-delay: 1s;"/>
+        <circle cx="340" cy="690" r="1" class="magic-particle" style="animation-delay: 2s;"/>
+        <circle cx="430" cy="650" r="1.8" class="magic-particle" style="animation-delay: 1.5s;"/>
+      </g>
+
+      <!-- PERSONAJE EN EL PORCHE -->
       <g class="character-group" id="characterGroup">
-        <!-- Reemplazar la capa de flores por el grupo de sembrado -->
-<g class="planting-action">
-  <!-- Flores que brotan en la tierra junto al porche -->
-  <g class="planted-flowers">
-    <!-- Flor 1 -->
-    <path d="M 412,715 L 412,708" stroke="#388e3c" stroke-width="1.2"/>
-    <circle cx="412" cy="707" r="2.5" fill="#ff4081"/>
-    
-    <!-- Flor 2 -->
-    <path d="M 418,716 L 419,706" stroke="#388e3c" stroke-width="1.2"/>
-    <circle cx="419" cy="705" r="2.2" fill="#ffeb3b"/>
-    
-    <!-- Flor 3 -->
-    <path d="M 424,717 L 425,709" stroke="#388e3c" stroke-width="1.2"/>
-    <circle cx="425" cy="708" r="2" fill="#ab47bc"/>
-  </g>
-</g>
-        <!-- Cuerpo / Silueta -->
+        <!-- Sombra individual a la altura del piso -->
+        <ellipse cx="393" cy="705" rx="8" ry="2" fill="#000000" opacity="0.4"/>
+
+        <g class="planting-action">
+          <g class="planted-flowers">
+            <path d="M 412,715 L 412,708" stroke="#388e3c" stroke-width="1.2"/>
+            <circle cx="412" cy="707" r="2.5" fill="#ff4081"/>
+            
+            <path d="M 418,716 L 419,706" stroke="#388e3c" stroke-width="1.2"/>
+            <circle cx="419" cy="705" r="2.2" fill="#ffeb3b"/>
+            
+            <path d="M 424,717 L 425,709" stroke="#388e3c" stroke-width="1.2"/>
+            <circle cx="425" cy="708" r="2" fill="#ab47bc"/>
+          </g>
+        </g>
+        <!-- Cuerpo -->
         <path d="M 388,685 Q 388,670 393,668 Q 398,670 398,685 Z" fill="#2b1820"/>
         <!-- Cabeza -->
         <circle cx="393" cy="663" r="4.5" fill="#3a2228"/>
-        <!-- Brazo extendido -->
+        <!-- Brazo -->
         <path d="M 395,672 L 403,675" stroke="#2b1820" stroke-width="2" stroke-linecap="round"/>
 
         <!-- CARTA EN LA MANO -->
@@ -404,22 +456,21 @@
           <rect x="403" y="671" width="8" height="6" fill="#ffffff" rx="1"/>
           <path d="M 403,671 L 407,674 L 411,671" stroke="#d0d0d0" stroke-width="0.8" fill="none"/>
         </g>
-
-
-      <!-- REFLEJO DE LA CABAÑA EN EL LAGO -->
-      <g transform="translate(0, 1430) scale(1, -1)" opacity="0.25" filter="url(#glow)">
-        <rect x="270" y="610" width="210" height="100" fill="url(#woodGrad)"/>
-        <polygon points="375,520 245,615 505,615" fill="#1d0d08"/>
-        <rect x="299" y="639" width="30" height="34" fill="url(#windowGlow)"/>
-        <rect x="419" y="639" width="30" height="34" fill="url(#windowGlow)"/>
       </g>
+
     </svg>
   </div>
 
-  <!-- MODAL PARA MOSTRAR LA CARTA -->
+  <!-- Elemento de audio en HTML -->
+  <audio id="bgMusic" loop preload="auto">
+    <!-- Sustituye 'tu_musica.mp3' por el nombre exacto de tu archivo local -->
+    <source src="tu_musica.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- MODAL DE LA CARTA -->
   <div class="modal-overlay" id="modalOverlay">
     <div class="letter-card">
-      <p id="letterText">"Que la tranquilidad de este amanecer y la luz de un nuevo día te traigan mucha paz y momentos hermosos."</p>
+      <p id="letterText">"Que este amanecer represente el periodo inicial de algo lindo que podamos construir juntos"</p>
       <button class="close-btn" id="closeBtn">Recibir mensaje</button>
     </div>
   </div>
@@ -429,39 +480,42 @@
     const characterGroup = document.getElementById('characterGroup');
     const modalOverlay = document.getElementById('modalOverlay');
     const closeBtn = document.getElementById('closeBtn');
+    const bgMusic = document.getElementById('bgMusic');
+
+    // Ajustar volumen del audio
+    bgMusic.volume = 0.4; 
+
+    // Activar reproducción de audio con la primera interacción del usuario
+    function playAudio() {
+      bgMusic.play().catch(error => {
+        console.log("Esperando interacción para audio:", error);
+      });
+    }
+    window.addEventListener('click', playAudio, { once: true });
 
     // 1. Iniciar la secuencia: Amanecer (7s) -> Zoom a la cabaña
     setTimeout(() => {
       canvasContainer.classList.add('zoomed');
 
-      // 2. Hacer salir a la persona con la carta tras completarse el zoom
+      // 2. Hacer salir al personaje caminando tras completarse el zoom
       setTimeout(() => {
         characterGroup.classList.add('visible');
       }, 3200);
 
     }, 5000);
 
-    // 3. Al hacer clic en el personaje / carta, abre el modal
+    // 3. Abrir la carta al hacer clic en el personaje
     characterGroup.addEventListener('click', () => {
       modalOverlay.classList.add('active');
     });
 
-    // 4. Al cerrar la carta, el personaje ofrece las flores
+    // 4. Al cerrar la carta, el personaje siembra las flores
     closeBtn.addEventListener('click', () => {
       modalOverlay.classList.remove('active');
-
       setTimeout(() => {
-        characterGroup.classList.add('offering-flowers');
+        characterGroup.classList.add('planting');
       }, 400);
     });
-    // Al cerrar la carta, el personaje se agacha y siembra las flores
-closeBtn.addEventListener('click', () => {
-  modalOverlay.classList.remove('active');
-
-  setTimeout(() => {
-    characterGroup.classList.add('planting');
-  }, 400);
-});
   </script>
 
 </body>
