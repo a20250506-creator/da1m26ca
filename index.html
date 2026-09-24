@@ -35,21 +35,34 @@
     /* =========================================================
        CONTENEDOR PRINCIPAL
        ========================================================= */
+.canvas-container {
+  position: fixed;
+  inset: 0;
 
-    .canvas-container {
-      position: fixed;
-      inset: 0;
+  width: 100vw;
+  height: 100dvh;
 
-      width: 100vw;
-      height: 100dvh;
+  overflow: hidden;
 
-      overflow: hidden;
+  /*
+    Punto de referencia del zoom:
+    la cabaña está aproximadamente en x=375, y=650
+    dentro del SVG.
+  */
+  transform-origin: 31.25% 81.25%;
 
-      transform-origin: 50% 72%;
+  transform: scale(1);
 
-      transition:
-        transform 3.5s cubic-bezier(0.25, 1, 0.5, 1);
-    }
+  transition:
+    transform 3.5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/*
+  ZOOM HACIA LA CABAÑA
+*/
+.canvas-container.zoomed {
+  transform: scale(2.7);
+}
 
     /*
       En celular hacemos un zoom moderado.
@@ -61,17 +74,24 @@
     }
 
     /*
-      Pantallas muy pequeñas
-    */
-    @media (max-width: 380px) {
-      .canvas-container.zoomed {
-        transform: scale(2.15);
-      }
-    }
-
+     
     /*
       Tablets / pantallas grandes
     */
+    @media (max-width: 768px) and (orientation: portrait) {
+
+  .canvas-container {
+    /*
+      La cabaña está a la izquierda y abajo
+      dentro de la composición original.
+    */
+    transform-origin: 31% 82%;
+  }
+
+  .canvas-container.zoomed {
+    transform: scale(3.0);
+  }
+}
     @media (min-width: 769px) {
       .canvas-container {
         transform-origin: 32% 84%;
