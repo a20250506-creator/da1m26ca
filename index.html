@@ -1,522 +1,1841 @@
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
   <title>The 1st month of something new</title>
+
   <style>
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    body, html {
+    html,
+    body {
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background-color: #030206;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #030206;
+      font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+      touch-action: manipulation;
     }
+
+    /* =========================================================
+       CONTENEDOR PRINCIPAL
+       ========================================================= */
 
     .canvas-container {
-      width: 100%;
-      height: 100%;
-      position: relative;
-      transform-origin: 32% 84%;
-      transition: transform 3.5s cubic-bezier(0.25, 1, 0.5, 1);
+      position: fixed;
+      inset: 0;
+
+      width: 100vw;
+      height: 100dvh;
+
+      overflow: hidden;
+
+      transform-origin: 50% 72%;
+
+      transition:
+        transform 3.5s cubic-bezier(0.25, 1, 0.5, 1);
     }
 
+    /*
+      En celular hacemos un zoom moderado.
+      Antes era 4.2 y podía sacar la cabaña/personaje
+      completamente de pantalla.
+    */
     .canvas-container.zoomed {
-      transform: scale(3.2);
+      transform: scale(2.35);
     }
 
-    /* Ajustes específicos para móviles */
-    @media (max-width: 768px) and (orientation: portrait) {
+    /*
+      Pantallas muy pequeñas
+    */
+    @media (max-width: 380px) {
+      .canvas-container.zoomed {
+        transform: scale(2.15);
+      }
+    }
+
+    /*
+      Tablets / pantallas grandes
+    */
+    @media (min-width: 769px) {
       .canvas-container {
         transform-origin: 32% 84%;
       }
 
       .canvas-container.zoomed {
-        transform: scale(4.2);
-      }
-
-      .letter-card {
-        width: 88%;
-        padding: 25px 20px;
-        font-size: 0.95rem;
+        transform: scale(3.2);
       }
     }
 
     svg {
+      display: block;
+
       width: 100%;
       height: 100%;
-      display: block;
+
+      /*
+        Vertical en celular.
+        Esto evita que el paisaje horizontal
+        domine toda la pantalla.
+      */
+      preserveAspectRatio: xMidYMid slice;
     }
 
-    /* Capa de oscuridad inicial para el amanecer */
+    /* =========================================================
+       OSCURIDAD INICIAL
+       ========================================================= */
+
     .dark-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
+      position: fixed;
+      inset: 0;
+
       width: 100%;
       height: 100%;
-      background-color: #030206;
-      opacity: 0.92;
+
+      background: #030206;
+
+      opacity: 0.94;
+
       pointer-events: none;
-      animation: fadeDarkness 7s ease-out forwards;
+
+      z-index: 10;
+
+      animation:
+        fadeDarkness 7s ease-out forwards;
     }
 
     @keyframes fadeDarkness {
-      0% { opacity: 0.95; }
-      100% { opacity: 0; }
+      0% {
+        opacity: 0.96;
+      }
+
+      100% {
+        opacity: 0;
+      }
     }
 
-    /* Animación del Sol */
+    /* =========================================================
+       SOL
+       ========================================================= */
+
     .sun-group {
-      transform: translateY(120px);
-      animation: riseSun 7s ease-out forwards;
+      transform-origin: 1020px 310px;
+
+      transform:
+        translateY(120px)
+        scale(0.7);
+
+      animation:
+        riseSun 7s ease-out forwards;
     }
 
     @keyframes riseSun {
-      0% { transform: translateY(120px) scale(0.7); }
-      100% { transform: translateY(0px) scale(1); }
+      0% {
+        transform:
+          translateY(120px)
+          scale(0.7);
+      }
+
+      100% {
+        transform:
+          translateY(0)
+          scale(1);
+      }
     }
 
-    /* Personaje y animación de salida/caminata con pisada firme */
+    /* =========================================================
+       PERSONAJE
+       ========================================================= */
+
     .character-group {
       opacity: 0;
-      transform: translateX(-15px);
-      transition: opacity 1s ease;
+
+      transform:
+        translateX(-15px);
+
       cursor: pointer;
+
+      /*
+        Hace que sea más fácil tocarlo
+        en una pantalla pequeña.
+      */
+      pointer-events: none;
+
+      transition:
+        opacity 1s ease;
     }
 
     .character-group.visible {
       opacity: 1;
-      animation: walkIn 2.2s cubic-bezier(0.25, 1, 0.5, 1) forwards, idleBreathe 3s ease-in-out 2.2s infinite alternate;
+
+      pointer-events: auto;
+
+      animation:
+        walkIn 2.2s cubic-bezier(0.25, 1, 0.5, 1) forwards,
+        idleBreathe 3s ease-in-out 2.2s infinite alternate;
     }
 
-    /* Simulación de caminata dando pasos firmes en el porche */
     @keyframes walkIn {
+
       0% {
-        transform: translateX(-15px) translateY(0px);
+        transform:
+          translateX(-15px)
+          translateY(0);
       }
+
       25% {
-        transform: translateX(-10px) translateY(-1.5px);
+        transform:
+          translateX(-10px)
+          translateY(-1.5px);
       }
+
       50% {
-        transform: translateX(-5px) translateY(0px);
+        transform:
+          translateX(-5px)
+          translateY(0);
       }
+
       75% {
-        transform: translateX(-2px) translateY(-1.5px);
+        transform:
+          translateX(-2px)
+          translateY(-1.5px);
       }
+
       100% {
-        transform: translateX(0px) translateY(0px);
+        transform:
+          translateX(0)
+          translateY(0);
       }
     }
 
     @keyframes idleBreathe {
-      0% { transform: translateY(0px); }
-      100% { transform: translateY(-1px); }
+
+      0% {
+        transform:
+          translateY(0);
+      }
+
+      100% {
+        transform:
+          translateY(-1px);
+      }
     }
 
-    /* Sobre flotante/pulsante con brillo dorado */
+    /* =========================================================
+       SOBRE
+       ========================================================= */
+
     .envelope {
-      animation: pulseEnvelope 1.2s infinite alternate ease-in-out;
-      transform-origin: center;
+      animation:
+        pulseEnvelope 1.2s infinite alternate ease-in-out;
+
+      transform-origin:
+        center;
     }
 
     @keyframes pulseEnvelope {
-      0% { transform: scale(1); filter: drop-shadow(0 0 2px #fff); }
-      100% { transform: scale(1.3); filter: drop-shadow(0 0 8px #fff2a8); }
+
+      0% {
+        transform: scale(1);
+
+        filter:
+          drop-shadow(
+            0 0 2px #fff
+          );
+      }
+
+      100% {
+        transform: scale(1.3);
+
+        filter:
+          drop-shadow(
+            0 0 8px #fff2a8
+          );
+      }
     }
 
-    /* Ocultar el sobre al sembrar */
+    /* =========================================================
+       SIEMBRA
+       ========================================================= */
+
     .character-group.planting .envelope {
       display: none;
     }
 
-    /* Inclinación del personaje para sembrar */
     .character-group.planting {
       animation: none;
-      transform: translateY(2px) rotate(8deg);
-      transform-origin: bottom center;
-      transition: transform 0.6s ease;
+
+      transform:
+        translateY(2px)
+        rotate(8deg);
+
+      transform-origin:
+        bottom center;
+
+      transition:
+        transform 0.6s ease;
     }
 
-    /* Animación de brote de flores con rebote sutil */
     .planted-flowers {
       opacity: 0;
-      transform: scale(0);
-      transform-origin: 415px 715px;
-      transition: opacity 0.8s ease, transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+      transform:
+        scale(0);
+
+      transform-origin:
+        415px 715px;
+
+      transition:
+        opacity 0.8s ease,
+        transform 1s cubic-bezier(
+          0.175,
+          0.885,
+          0.32,
+          1.275
+        );
     }
 
     .character-group.planting .planted-flowers {
       opacity: 1;
-      transform: scale(1);
+
+      transform:
+        scale(1);
     }
 
-    /* Partículas mágicas que flotan suavemente */
+    /* =========================================================
+       PARTÍCULAS
+       ========================================================= */
+
     .magic-particle {
-      animation: particleFloat 4s infinite ease-in-out alternate;
+      animation:
+        particleFloat
+        4s
+        infinite
+        ease-in-out
+        alternate;
     }
 
     @keyframes particleFloat {
-      0% { transform: translateY(0) translateX(0); opacity: 0.3; }
-      50% { opacity: 0.8; }
-      100% { transform: translateY(-12px) translateX(6px); opacity: 0.2; }
+
+      0% {
+        transform:
+          translateY(0)
+          translateX(0);
+
+        opacity: 0.3;
+      }
+
+      50% {
+        opacity: 0.8;
+      }
+
+      100% {
+        transform:
+          translateY(-12px)
+          translateX(6px);
+
+        opacity: 0.2;
+      }
     }
 
-    /* Humo suave de la chimenea */
+    /* =========================================================
+       HUMO
+       ========================================================= */
+
     .smoke-particle {
-      animation: smokeRise 5s infinite linear;
-      transform-origin: center;
+      animation:
+        smokeRise
+        5s
+        infinite
+        linear;
+
+      transform-origin:
+        center;
     }
 
     @keyframes smokeRise {
-      0% { transform: translateY(0) scale(0.8); opacity: 0; }
-      30% { opacity: 0.4; }
-      100% { transform: translateY(-40px) scale(2.2); opacity: 0; }
+
+      0% {
+        transform:
+          translateY(0)
+          scale(0.8);
+
+        opacity: 0;
+      }
+
+      30% {
+        opacity: 0.4;
+      }
+
+      100% {
+        transform:
+          translateY(-40px)
+          scale(2.2);
+
+        opacity: 0;
+      }
     }
 
-    /* Modal de la Carta */
+    /* =========================================================
+       MODAL
+       ========================================================= */
+
     .modal-overlay {
       position: fixed;
-      top: 0;
-      left: 0;
+
+      inset: 0;
+
       width: 100%;
       height: 100%;
-      background: rgba(8, 5, 12, 0.75);
-      backdrop-filter: blur(4px);
-      display: flex;
-      justify-content: center;
-      align-items: center;
+
+      padding:
+        20px;
+
+      background:
+        rgba(
+          8,
+          5,
+          12,
+          0.78
+        );
+
+      backdrop-filter:
+        blur(5px);
+
+      -webkit-backdrop-filter:
+        blur(5px);
+
+      display:
+        flex;
+
+      justify-content:
+        center;
+
+      align-items:
+        center;
+
       z-index: 1000;
+
       opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.5s ease;
+
+      pointer-events:
+        none;
+
+      transition:
+        opacity 0.5s ease;
     }
 
     .modal-overlay.active {
       opacity: 1;
-      pointer-events: auto;
+
+      pointer-events:
+        auto;
     }
+
+    /* =========================================================
+       CARTA
+       ========================================================= */
 
     .letter-card {
-      background: #fcf8ee;
-      color: #2b2118;
-      padding: 35px 30px;
-      border-radius: 8px;
-      max-width: 420px;
-      width: 85%;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.5), inset 0 0 80px rgba(220,200,160,0.3);
-      text-align: center;
-      transform: translateY(30px);
-      transition: transform 0.5s ease;
-      border: 1px solid #e0d0b0;
+
+      position: relative;
+
+      width: min(
+        420px,
+        92vw
+      );
+
+      max-height:
+        82dvh;
+
+      overflow-y:
+        auto;
+
+      background:
+        #fcf8ee;
+
+      color:
+        #2b2118;
+
+      padding:
+        30px 24px;
+
+      border-radius:
+        10px;
+
+      box-shadow:
+        0 20px 40px
+        rgba(0,0,0,0.5),
+
+        inset 0 0 80px
+        rgba(220,200,160,0.3);
+
+      text-align:
+        center;
+
+      transform:
+        translateY(30px)
+        scale(0.96);
+
+      transition:
+        transform 0.5s ease;
+
+      border:
+        1px solid #e0d0b0;
     }
 
-    .modal-overlay.active .letter-card {
-      transform: translateY(0);
+    .modal-overlay.active
+    .letter-card {
+
+      transform:
+        translateY(0)
+        scale(1);
     }
 
     .letter-card p {
-      font-size: 1.15rem;
-      line-height: 1.6;
-      margin-bottom: 25px;
-      color: #3a2b20;
+
+      font-size:
+        clamp(
+          1rem,
+          4.2vw,
+          1.15rem
+        );
+
+      line-height:
+        1.6;
+
+      margin-bottom:
+        24px;
+
+      color:
+        #3a2b20;
     }
 
     .close-btn {
-      background: #8c3a27;
-      color: #fff;
-      border: none;
-      padding: 10px 24px;
-      border-radius: 20px;
-      font-size: 0.95rem;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(140, 58, 39, 0.3);
-      transition: background 0.2s, transform 0.2s;
+
+      background:
+        #8c3a27;
+
+      color:
+        #fff;
+
+      border:
+        none;
+
+      padding:
+        12px 25px;
+
+      min-height:
+        44px;
+
+      border-radius:
+        22px;
+
+      font-size:
+        0.95rem;
+
+      cursor:
+        pointer;
+
+      box-shadow:
+        0 4px 12px
+        rgba(
+          140,
+          58,
+          39,
+          0.3
+        );
+
+      transition:
+        background 0.2s,
+        transform 0.2s;
+    }
+
+    .close-btn:active {
+      transform:
+        scale(0.96);
     }
 
     .close-btn:hover {
-      background: #a64630;
-      transform: scale(1.05);
+      background:
+        #a64630;
+
+      transform:
+        scale(1.05);
     }
+
+    /* =========================================================
+       AJUSTES PARA TELÉFONOS MUY PEQUEÑOS
+       ========================================================= */
+
+    @media (max-width: 430px) {
+
+      .letter-card {
+        padding:
+          26px 20px;
+      }
+
+      .letter-card p {
+        font-size:
+          1rem;
+
+        line-height:
+          1.55;
+      }
+
+      .close-btn {
+        width:
+          100%;
+      }
+    }
+
+    /* =========================================================
+       PANTALLAS MUY ALTAS
+       ========================================================= */
+
+    @media (max-width: 500px)
+      and (min-height: 800px) {
+
+      .canvas-container {
+        transform-origin:
+          50% 67%;
+      }
+
+      .canvas-container.zoomed {
+        transform:
+          scale(2.45);
+      }
+    }
+
   </style>
 </head>
+
 <body>
 
-  <div class="canvas-container" id="canvasContainer">
+  <div
+    class="canvas-container"
+    id="canvasContainer"
+  >
+
     <div class="dark-overlay"></div>
-    
-    <svg viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+
+    <svg
+      viewBox="0 0 1200 800"
+      preserveAspectRatio="xMidYMid slice"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+
       <defs>
-        <!-- Gradientes del cielo, sol y lago -->
-        <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="#0c0714"/>
-          <stop offset="35%" stop-color="#230f2b"/>
-          <stop offset="65%" stop-color="#591a38"/>
-          <stop offset="85%" stop-color="#b84532"/>
-          <stop offset="100%" stop-color="#f79841"/>
+
+        <!-- =================================================
+             CIELO
+             ================================================= -->
+
+        <linearGradient
+          id="skyGrad"
+          x1="0%"
+          y1="0%"
+          x2="0%"
+          y2="100%"
+        >
+          <stop
+            offset="0%"
+            stop-color="#0c0714"
+          />
+
+          <stop
+            offset="35%"
+            stop-color="#230f2b"
+          />
+
+          <stop
+            offset="65%"
+            stop-color="#591a38"
+          />
+
+          <stop
+            offset="85%"
+            stop-color="#b84532"
+          />
+
+          <stop
+            offset="100%"
+            stop-color="#f79841"
+          />
         </linearGradient>
 
-        <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#ffffff"/>
-          <stop offset="20%" stop-color="#fff3a1"/>
-          <stop offset="50%" stop-color="#fca835" stop-opacity="0.8"/>
-          <stop offset="100%" stop-color="#e24a1f" stop-opacity="0"/>
+
+        <!-- =================================================
+             SOL
+             ================================================= -->
+
+        <radialGradient
+          id="sunGlow"
+          cx="50%"
+          cy="50%"
+          r="50%"
+        >
+          <stop
+            offset="0%"
+            stop-color="#ffffff"
+          />
+
+          <stop
+            offset="20%"
+            stop-color="#fff3a1"
+          />
+
+          <stop
+            offset="50%"
+            stop-color="#fca835"
+            stop-opacity="0.8"
+          />
+
+          <stop
+            offset="100%"
+            stop-color="#e24a1f"
+            stop-opacity="0"
+          />
         </radialGradient>
 
-        <linearGradient id="lakeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="#421a2b"/>
-          <stop offset="30%" stop-color="#211024"/>
-          <stop offset="100%" stop-color="#09050d"/>
+
+        <!-- =================================================
+             LAGO
+             ================================================= -->
+
+        <linearGradient
+          id="lakeGrad"
+          x1="0%"
+          y1="0%"
+          x2="0%"
+          y2="100%"
+        >
+          <stop
+            offset="0%"
+            stop-color="#421a2b"
+          />
+
+          <stop
+            offset="30%"
+            stop-color="#211024"
+          />
+
+          <stop
+            offset="100%"
+            stop-color="#09050d"
+          />
         </linearGradient>
 
-        <linearGradient id="sunReflection" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="#fca835" stop-opacity="0.6"/>
-          <stop offset="50%" stop-color="#e24a1f" stop-opacity="0.2"/>
-          <stop offset="100%" stop-color="#211024" stop-opacity="0"/>
+
+        <!-- =================================================
+             REFLEJO
+             ================================================= -->
+
+        <linearGradient
+          id="sunReflection"
+          x1="0%"
+          y1="0%"
+          x2="0%"
+          y2="100%"
+        >
+
+          <stop
+            offset="0%"
+            stop-color="#fca835"
+            stop-opacity="0.6"
+          />
+
+          <stop
+            offset="50%"
+            stop-color="#e24a1f"
+            stop-opacity="0.2"
+          />
+
+          <stop
+            offset="100%"
+            stop-color="#211024"
+            stop-opacity="0"
+          />
+
         </linearGradient>
 
-        <!-- Gradientes para la Cabaña -->
-        <linearGradient id="woodGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stop-color="#2d1710"/>
-          <stop offset="50%" stop-color="#452419"/>
-          <stop offset="100%" stop-color="#22100a"/>
+
+        <!-- =================================================
+             MADERA
+             ================================================= -->
+
+        <linearGradient
+          id="woodGrad"
+          x1="0%"
+          y1="0%"
+          x2="100%"
+          y2="0%"
+        >
+
+          <stop
+            offset="0%"
+            stop-color="#2d1710"
+          />
+
+          <stop
+            offset="50%"
+            stop-color="#452419"
+          />
+
+          <stop
+            offset="100%"
+            stop-color="#22100a"
+          />
+
         </linearGradient>
 
-        <radialGradient id="windowGlow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#fffbe6"/>
-          <stop offset="60%" stop-color="#ffbd38"/>
-          <stop offset="100%" stop-color="#e67e22"/>
+
+        <!-- =================================================
+             VENTANAS
+             ================================================= -->
+
+        <radialGradient
+          id="windowGlow"
+          cx="50%"
+          cy="50%"
+          r="50%"
+        >
+
+          <stop
+            offset="0%"
+            stop-color="#fffbe6"
+          />
+
+          <stop
+            offset="60%"
+            stop-color="#ffbd38"
+          />
+
+          <stop
+            offset="100%"
+            stop-color="#e67e22"
+          />
+
         </radialGradient>
 
-        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="6" result="blur" />
-          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+
+        <!-- =================================================
+             GLOW
+             ================================================= -->
+
+        <filter
+          id="glow"
+          x="-50%"
+          y="-50%"
+          width="200%"
+          height="200%"
+        >
+
+          <feGaussianBlur
+            stdDeviation="6"
+            result="blur"
+          />
+
+          <feComposite
+            in="SourceGraphic"
+            in2="blur"
+            operator="over"
+          />
+
         </filter>
+
       </defs>
 
-      <!-- CIELO -->
-      <rect width="1200" height="550" fill="url(#skyGrad)"/>
 
-      <!-- ESTRELLAS TENUES -->
-      <g fill="#ffffff" opacity="0.4">
-        <circle cx="150" cy="50" r="1"/>
-        <circle cx="320" cy="80" r="1.5"/>
-        <circle cx="450" cy="40" r="1"/>
-        <circle cx="680" cy="70" r="1.2"/>
-        <circle cx="850" cy="30" r="1"/>
-        <circle cx="1020" cy="90" r="1.5"/>
+      <!-- ===================================================
+           CIELO
+           =================================================== -->
+
+      <rect
+        width="1200"
+        height="550"
+        fill="url(#skyGrad)"
+      />
+
+
+      <!-- ESTRELLAS -->
+
+      <g
+        fill="#ffffff"
+        opacity="0.4"
+      >
+
+        <circle
+          cx="150"
+          cy="50"
+          r="1"
+        />
+
+        <circle
+          cx="320"
+          cy="80"
+          r="1.5"
+        />
+
+        <circle
+          cx="450"
+          cy="40"
+          r="1"
+        />
+
+        <circle
+          cx="680"
+          cy="70"
+          r="1.2"
+        />
+
+        <circle
+          cx="850"
+          cy="30"
+          r="1"
+        />
+
+        <circle
+          cx="1020"
+          cy="90"
+          r="1.5"
+        />
+
       </g>
 
-      <!-- SOL Y RESPLANDOR -->
+
+      <!-- ===================================================
+           SOL
+           =================================================== -->
+
       <g class="sun-group">
-        <circle cx="1020" cy="310" r="120" fill="url(#sunGlow)"/>
-        <circle cx="1020" cy="310" r="28" fill="#fffdf0"/>
+
+        <circle
+          cx="1020"
+          cy="310"
+          r="120"
+          fill="url(#sunGlow)"
+        />
+
+        <circle
+          cx="1020"
+          cy="310"
+          r="28"
+          fill="#fffdf0"
+        />
+
       </g>
 
-      <!-- MONTAÑAS DE FONDO -->
-      <polygon points="-50,550 120,320 340,550" fill="#1b0b21"/>
-      <polygon points="200,550 480,240 720,550" fill="#16081c"/>
 
-      <!-- MONTAÑAS PRINCIPALES DE ENFRENTE -->
-      <polygon points="-50,550 280,210 580,550" fill="#2d122e"/>
-      <polygon points="120,280 280,210 320,280" fill="#4a1d42" opacity="0.5"/>
+      <!-- ===================================================
+           MONTAÑAS
+           =================================================== -->
 
-      <polygon points="380,550 700,260 980,550" fill="#381533"/>
-      <polygon points="560,330 700,260 750,330" fill="#5c204b" opacity="0.5"/>
+      <polygon
+        points="-50,550 120,320 340,550"
+        fill="#1b0b21"
+      />
 
-      <polygon points="750,550 960,320 1250,550" fill="#481a35"/>
-      <polygon points="820,550 1060,280 1250,550" fill="#2a0d25"/>
+      <polygon
+        points="200,550 480,240 720,550"
+        fill="#16081c"
+      />
 
-      <!-- LAGO -->
-      <rect y="530" width="1200" height="270" fill="url(#lakeGrad)"/>
+      <polygon
+        points="-50,550 280,210 580,550"
+        fill="#2d122e"
+      />
 
-      <!-- REFLEJO DEL SOL EN EL AGUA -->
-      <polygon points="1020,530 960,800 1080,800 1040,530" fill="url(#sunReflection)" />
-      
-      <g stroke="url(#sunReflection)" stroke-width="2" opacity="0.7">
-        <line x1="970" y1="560" x2="1070" y2="560"/>
-        <line x1="950" y1="600" x2="1080" y2="600"/>
-        <line x1="930" y1="650" x2="1090" y2="650"/>
-        <line x1="910" y1="710" x2="1060" y2="710"/>
+      <polygon
+        points="120,280 280,210 320,280"
+        fill="#4a1d42"
+        opacity="0.5"
+      />
+
+      <polygon
+        points="380,550 700,260 980,550"
+        fill="#381533"
+      />
+
+      <polygon
+        points="560,330 700,260 750,330"
+        fill="#5c204b"
+        opacity="0.5"
+      />
+
+      <polygon
+        points="750,550 960,320 1250,550"
+        fill="#481a35"
+      />
+
+      <polygon
+        points="820,550 1060,280 1250,550"
+        fill="#2a0d25"
+      />
+
+
+      <!-- ===================================================
+           LAGO
+           =================================================== -->
+
+      <rect
+        y="530"
+        width="1200"
+        height="270"
+        fill="url(#lakeGrad)"
+      />
+
+
+      <!-- REFLEJO -->
+
+      <polygon
+        points="1020,530 960,800 1080,800 1040,530"
+        fill="url(#sunReflection)"
+      />
+
+
+      <g
+        stroke="url(#sunReflection)"
+        stroke-width="2"
+        opacity="0.7"
+      >
+
+        <line
+          x1="970"
+          y1="560"
+          x2="1070"
+          y2="560"
+        />
+
+        <line
+          x1="950"
+          y1="600"
+          x2="1080"
+          y2="600"
+        />
+
+        <line
+          x1="930"
+          y1="650"
+          x2="1090"
+          y2="650"
+        />
+
+        <line
+          x1="910"
+          y1="710"
+          x2="1060"
+          y2="710"
+        />
+
       </g>
 
-      <!-- BOSQUE DE SILUETAS -->
-      <path d="M 0,540 L 0,480 L 15,500 L 30,470 L 50,510 L 70,460 L 90,500 L 120,450 
-               L 150,490 L 180,440 L 220,510 L 260,460 L 300,520 L 350,470 L 400,530 
-               L 800,530 L 850,480 L 890,510 L 930,460 L 970,500 L 1020,450 L 1080,490 
-               L 1120,440 L 1160,480 L 1200,430 L 1200,540 Z" fill="#0f0714"/>
 
-      <!-- ORILLA DE TIERRA Y PASTO -->
-      <path d="M -10,620 Q 200,580 450,640 T 900,610 Q 1100,590 1210,630 L 1210,810 L -10,810 Z" fill="#120a14"/>
-      <path d="M -10,640 Q 220,600 420,660 T 850,630 Q 1050,600 1210,650 L 1210,810 L -10,810 Z" fill="#0a050b"/>
+      <!-- ===================================================
+           BOSQUE
+           =================================================== -->
 
-      <!-- ÁRBOLES EN PRIMER PLANO -->
+      <path
+        d="
+        M 0,540
+        L 0,480
+        L 15,500
+        L 30,470
+        L 50,510
+        L 70,460
+        L 90,500
+        L 120,450
+        L 150,490
+        L 180,440
+        L 220,510
+        L 260,460
+        L 300,520
+        L 350,470
+        L 400,530
+        L 800,530
+        L 850,480
+        L 890,510
+        L 930,460
+        L 970,500
+        L 1020,450
+        L 1080,490
+        L 1120,440
+        L 1160,480
+        L 1200,430
+        L 1200,540
+        Z
+        "
+        fill="#0f0714"
+      />
+
+
+      <!-- ===================================================
+           TIERRA
+           =================================================== -->
+
+      <path
+        d="
+        M -10,620
+        Q 200,580 450,640
+        T 900,610
+        Q 1100,590 1210,630
+        L 1210,810
+        L -10,810
+        Z
+        "
+        fill="#120a14"
+      />
+
+      <path
+        d="
+        M -10,640
+        Q 220,600 420,660
+        T 850,630
+        Q 1050,600 1210,650
+        L 1210,810
+        L -10,810
+        Z
+        "
+        fill="#0a050b"
+      />
+
+
+      <!-- ===================================================
+           ÁRBOLES
+           =================================================== -->
+
       <g fill="#08030a">
-        <polygon points="60,670 15,550 110,670"/>
-        <polygon points="60,600 25,480 95,600"/>
-        <polygon points="60,520 35,410 85,520"/>
-        <rect x="53" y="670" width="14" height="40"/>
 
-        <polygon points="130,680 95,570 165,680"/>
-        <polygon points="130,610 105,510 155,610"/>
-        <rect x="125" y="680" width="10" height="30"/>
+        <polygon
+          points="60,670 15,550 110,670"
+        />
+
+        <polygon
+          points="60,600 25,480 95,600"
+        />
+
+        <polygon
+          points="60,520 35,410 85,520"
+        />
+
+        <rect
+          x="53"
+          y="670"
+          width="14"
+          height="40"
+        />
+
+
+        <polygon
+          points="130,680 95,570 165,680"
+        />
+
+        <polygon
+          points="130,610 105,510 155,610"
+        />
+
+        <rect
+          x="125"
+          y="680"
+          width="10"
+          height="30"
+        />
+
       </g>
 
-      <!-- CABAÑA DE MADERA -->
-      <g id="cabinGroup">
-        <!-- Chimenea y Humo -->
-        <rect x="430" y="540" width="16" height="35" fill="#1d0d08"/>
-        <circle cx="438" cy="530" r="4" fill="#ffffff" class="smoke-particle"/>
-        <circle cx="438" cy="520" r="6" fill="#ffffff" class="smoke-particle" style="animation-delay: 1.5s;"/>
 
-        <ellipse cx="380" cy="725" rx="140" ry="20" fill="#000000" opacity="0.6"/>
-        <rect x="270" y="610" width="210" height="100" fill="url(#woodGrad)" rx="3"/>
-        
-        <g stroke="#170a06" stroke-width="2" opacity="0.8">
-          <line x1="270" y1="625" x2="480" y2="625"/>
-          <line x1="270" y1="640" x2="480" y2="640"/>
-          <line x1="270" y1="655" x2="480" y2="655"/>
-          <line x1="270" y1="670" x2="480" y2="670"/>
-          <line x1="270" y1="685" x2="480" y2="685"/>
-          <line x1="270" y1="700" x2="480" y2="700"/>
+      <!-- ===================================================
+           CABAÑA
+           =================================================== -->
+
+      <g id="cabinGroup">
+
+        <!-- Chimenea -->
+
+        <rect
+          x="430"
+          y="540"
+          width="16"
+          height="35"
+          fill="#1d0d08"
+        />
+
+        <circle
+          cx="438"
+          cy="530"
+          r="4"
+          fill="#ffffff"
+          class="smoke-particle"
+        />
+
+        <circle
+          cx="438"
+          cy="520"
+          r="6"
+          fill="#ffffff"
+          class="smoke-particle"
+          style="animation-delay:1.5s;"
+        />
+
+
+        <!-- Sombra -->
+
+        <ellipse
+          cx="380"
+          cy="725"
+          rx="140"
+          ry="20"
+          fill="#000000"
+          opacity="0.6"
+        />
+
+
+        <!-- Casa -->
+
+        <rect
+          x="270"
+          y="610"
+          width="210"
+          height="100"
+          fill="url(#woodGrad)"
+          rx="3"
+        />
+
+
+        <!-- Madera -->
+
+        <g
+          stroke="#170a06"
+          stroke-width="2"
+          opacity="0.8"
+        >
+
+          <line
+            x1="270"
+            y1="625"
+            x2="480"
+            y2="625"
+          />
+
+          <line
+            x1="270"
+            y1="640"
+            x2="480"
+            y2="640"
+          />
+
+          <line
+            x1="270"
+            y1="655"
+            x2="480"
+            y2="655"
+          />
+
+          <line
+            x1="270"
+            y1="670"
+            x2="480"
+            y2="670"
+          />
+
+          <line
+            x1="270"
+            y1="685"
+            x2="480"
+            y2="685"
+          />
+
+          <line
+            x1="270"
+            y1="700"
+            x2="480"
+            y2="700"
+          />
+
         </g>
+
 
         <!-- TECHO -->
-        <polygon points="375,520 245,615 505,615" fill="#1d0d08"/>
-        <polygon points="375,520 250,610 500,610" fill="#2d1710"/>
-        <polyline points="505,615 375,520" stroke="#f79841" stroke-width="3" fill="none" opacity="0.8"/>
+
+        <polygon
+          points="375,520 245,615 505,615"
+          fill="#1d0d08"
+        />
+
+        <polygon
+          points="375,520 250,610 500,610"
+          fill="#2d1710"
+        />
+
+        <polyline
+          points="505,615 375,520"
+          stroke="#f79841"
+          stroke-width="3"
+          fill="none"
+          opacity="0.8"
+        />
+
 
         <!-- BUHARDILLA -->
-        <polygon points="375,555 355,575 395,575" fill="#1d0d08"/>
-        <rect x="363" y="565" width="24" height="20" fill="url(#woodGrad)"/>
-        <rect x="369" y="569" width="12" height="12" fill="url(#windowGlow)" filter="url(#glow)"/>
 
-        <!-- VENTANAS -->
-        <rect x="295" y="635" width="38" height="42" fill="#170a06" rx="2"/>
-        <rect x="299" y="639" width="30" height="34" fill="url(#windowGlow)" filter="url(#glow)"/>
-        <path d="M 314,639 L 314,673 M 299,656 L 329,656" stroke="#2d1710" stroke-width="2"/>
+        <polygon
+          points="375,555 355,575 395,575"
+          fill="#1d0d08"
+        />
 
-        <rect x="415" y="635" width="38" height="42" fill="#170a06" rx="2"/>
-        <rect x="419" y="639" width="30" height="34" fill="url(#windowGlow)" filter="url(#glow)"/>
-        <path d="M 434,639 L 434,673 M 419,656 L 449,656" stroke="#2d1710" stroke-width="2"/>
+        <rect
+          x="363"
+          y="565"
+          width="24"
+          height="20"
+          fill="url(#woodGrad)"
+        />
+
+        <rect
+          x="369"
+          y="569"
+          width="12"
+          height="12"
+          fill="url(#windowGlow)"
+          filter="url(#glow)"
+        />
+
+
+        <!-- VENTANA IZQUIERDA -->
+
+        <rect
+          x="295"
+          y="635"
+          width="38"
+          height="42"
+          fill="#170a06"
+          rx="2"
+        />
+
+        <rect
+          x="299"
+          y="639"
+          width="30"
+          height="34"
+          fill="url(#windowGlow)"
+          filter="url(#glow)"
+        />
+
+        <path
+          d="
+          M 314,639
+          L 314,673
+          M 299,656
+          L 329,656
+          "
+          stroke="#2d1710"
+          stroke-width="2"
+        />
+
+
+        <!-- VENTANA DERECHA -->
+
+        <rect
+          x="415"
+          y="635"
+          width="38"
+          height="42"
+          fill="#170a06"
+          rx="2"
+        />
+
+        <rect
+          x="419"
+          y="639"
+          width="30"
+          height="34"
+          fill="url(#windowGlow)"
+          filter="url(#glow)"
+        />
+
+        <path
+          d="
+          M 434,639
+          L 434,673
+          M 419,656
+          L 449,656
+          "
+          stroke="#2d1710"
+          stroke-width="2"
+        />
+
 
         <!-- PUERTA -->
-        <rect x="355" y="640" width="40" height="70" fill="#180b07" rx="2"/>
-        <rect x="359" y="644" width="32" height="66" fill="#28130c"/>
-        <circle cx="365" cy="678" r="2.5" fill="#e67e22"/>
+
+        <rect
+          x="355"
+          y="640"
+          width="40"
+          height="70"
+          fill="#180b07"
+          rx="2"
+        />
+
+        <rect
+          x="359"
+          y="644"
+          width="32"
+          height="66"
+          fill="#28130c"
+        />
+
+        <circle
+          cx="365"
+          cy="678"
+          r="2.5"
+          fill="#e67e22"
+        />
+
 
         <!-- PORCHE -->
-        <rect x="255" y="705" width="240" height="12" fill="#24120b"/>
-        <rect x="255" y="717" width="240" height="4" fill="#0f0603"/>
+
+        <rect
+          x="255"
+          y="705"
+          width="240"
+          height="12"
+          fill="#24120b"
+        />
+
+        <rect
+          x="255"
+          y="717"
+          width="240"
+          height="4"
+          fill="#0f0603"
+        />
+
 
         <!-- FAROL -->
-        <circle cx="348" cy="648" r="4" fill="#fffbe6" filter="url(#glow)"/>
+
+        <circle
+          cx="348"
+          cy="648"
+          r="4"
+          fill="#fffbe6"
+          filter="url(#glow)"
+        />
+
       </g>
 
-      <!-- LUCIÉRNAGAS / POLVO MÁGICO EN EL AIRE -->
+
+      <!-- ===================================================
+           LUCES / POLVO MÁGICO
+           =================================================== -->
+
       <g fill="#ffe082">
-        <circle cx="370" cy="660" r="1.5" class="magic-particle" style="animation-delay: 0s;"/>
-        <circle cx="410" cy="680" r="1.2" class="magic-particle" style="animation-delay: 1s;"/>
-        <circle cx="340" cy="690" r="1" class="magic-particle" style="animation-delay: 2s;"/>
-        <circle cx="430" cy="650" r="1.8" class="magic-particle" style="animation-delay: 1.5s;"/>
+
+        <circle
+          cx="370"
+          cy="660"
+          r="1.5"
+          class="magic-particle"
+          style="animation-delay:0s;"
+        />
+
+        <circle
+          cx="410"
+          cy="680"
+          r="1.2"
+          class="magic-particle"
+          style="animation-delay:1s;"
+        />
+
+        <circle
+          cx="340"
+          cy="690"
+          r="1"
+          class="magic-particle"
+          style="animation-delay:2s;"
+        />
+
+        <circle
+          cx="430"
+          cy="650"
+          r="1.8"
+          class="magic-particle"
+          style="animation-delay:1.5s;"
+        />
+
       </g>
 
-      <!-- PERSONAJE EN EL PORCHE -->
-      <g class="character-group" id="characterGroup">
-        <!-- Sombra individual a la altura del piso -->
-        <ellipse cx="393" cy="705" rx="8" ry="2" fill="#000000" opacity="0.4"/>
+
+      <!-- ===================================================
+           PERSONAJE
+           =================================================== -->
+
+      <g
+        class="character-group"
+        id="characterGroup"
+      >
+
+        <!-- Sombra -->
+
+        <ellipse
+          cx="393"
+          cy="705"
+          rx="8"
+          ry="2"
+          fill="#000000"
+          opacity="0.4"
+        />
+
+
+        <!-- FLORES -->
 
         <g class="planting-action">
-          <g class="planted-flowers">
-            <path d="M 412,715 L 412,708" stroke="#388e3c" stroke-width="1.2"/>
-            <circle cx="412" cy="707" r="2.5" fill="#ff4081"/>
-            
-            <path d="M 418,716 L 419,706" stroke="#388e3c" stroke-width="1.2"/>
-            <circle cx="419" cy="705" r="2.2" fill="#ffeb3b"/>
-            
-            <path d="M 424,717 L 425,709" stroke="#388e3c" stroke-width="1.2"/>
-            <circle cx="425" cy="708" r="2" fill="#ab47bc"/>
-          </g>
-        </g>
-        <!-- Cuerpo -->
-        <path d="M 388,685 Q 388,670 393,668 Q 398,670 398,685 Z" fill="#2b1820"/>
-        <!-- Cabeza -->
-        <circle cx="393" cy="663" r="4.5" fill="#3a2228"/>
-        <!-- Brazo -->
-        <path d="M 395,672 L 403,675" stroke="#2b1820" stroke-width="2" stroke-linecap="round"/>
 
-        <!-- CARTA EN LA MANO -->
-        <g class="envelope">
-          <rect x="403" y="671" width="8" height="6" fill="#ffffff" rx="1"/>
-          <path d="M 403,671 L 407,674 L 411,671" stroke="#d0d0d0" stroke-width="0.8" fill="none"/>
+          <g class="planted-flowers">
+
+            <path
+              d="M 412,715 L 412,708"
+              stroke="#388e3c"
+              stroke-width="1.2"
+            />
+
+            <circle
+              cx="412"
+              cy="707"
+              r="2.5"
+              fill="#ff4081"
+            />
+
+
+            <path
+              d="M 418,716 L 419,706"
+              stroke="#388e3c"
+              stroke-width="1.2"
+            />
+
+            <circle
+              cx="419"
+              cy="705"
+              r="2.2"
+              fill="#ffeb3b"
+            />
+
+
+            <path
+              d="M 424,717 L 425,709"
+              stroke="#388e3c"
+              stroke-width="1.2"
+            />
+
+            <circle
+              cx="425"
+              cy="708"
+              r="2"
+              fill="#ab47bc"
+            />
+
+          </g>
+
         </g>
+
+
+        <!-- CUERPO -->
+
+        <path
+          d="
+          M 388,685
+          Q 388,670 393,668
+          Q 398,670 398,685
+          Z
+          "
+          fill="#2b1820"
+        />
+
+
+        <!-- CABEZA -->
+
+        <circle
+          cx="393"
+          cy="663"
+          r="4.5"
+          fill="#3a2228"
+        />
+
+
+        <!-- BRAZO -->
+
+        <path
+          d="
+          M 395,672
+          L 403,675
+          "
+          stroke="#2b1820"
+          stroke-width="2"
+          stroke-linecap="round"
+        />
+
+
+        <!-- CARTA -->
+
+        <g class="envelope">
+
+          <rect
+            x="403"
+            y="671"
+            width="8"
+            height="6"
+            fill="#ffffff"
+            rx="1"
+          />
+
+          <path
+            d="
+            M 403,671
+            L 407,674
+            L 411,671
+            "
+            stroke="#d0d0d0"
+            stroke-width="0.8"
+            fill="none"
+          />
+
+        </g>
+
       </g>
 
     </svg>
+
   </div>
 
-  <!-- Elemento de audio en HTML -->
-  <audio id="bgMusic" loop preload="auto">
-    <!-- Sustituye 'tu_musica.mp3' por el nombre exacto de tu archivo local -->
-    <source src="tu_musica.mp3" type="audio/mpeg">
+
+  <!-- =====================================================
+       AUDIO
+       ===================================================== -->
+
+  <audio
+    id="bgMusic"
+    loop
+    preload="auto"
+  >
+
+    <source
+      src="tu_musica.mp3"
+      type="audio/mpeg"
+    >
+
   </audio>
 
-  <!-- MODAL DE LA CARTA -->
-  <div class="modal-overlay" id="modalOverlay">
+
+  <!-- =====================================================
+       MODAL
+       ===================================================== -->
+
+  <div
+    class="modal-overlay"
+    id="modalOverlay"
+  >
+
     <div class="letter-card">
-      <p id="letterText">"Que este amanecer represente el periodo inicial de algo lindo que podamos construir juntos"</p>
-      <button class="close-btn" id="closeBtn">Recibir mensaje</button>
+
+      <p id="letterText">
+        "Que este amanecer represente el periodo inicial
+        de algo lindo que podamos construir juntos"
+      </p>
+
+      <button
+        class="close-btn"
+        id="closeBtn"
+      >
+        Recibir mensaje
+      </button>
+
     </div>
+
   </div>
 
+
+  <!-- =====================================================
+       JAVASCRIPT
+       ===================================================== -->
+
   <script>
-    const canvasContainer = document.getElementById('canvasContainer');
-    const characterGroup = document.getElementById('characterGroup');
-    const modalOverlay = document.getElementById('modalOverlay');
-    const closeBtn = document.getElementById('closeBtn');
-    const bgMusic = document.getElementById('bgMusic');
 
-    // Ajustar volumen del audio
-    bgMusic.volume = 0.4; 
+    const canvasContainer =
+      document.getElementById(
+        "canvasContainer"
+      );
 
-    // Activar reproducción de audio con la primera interacción del usuario
+    const characterGroup =
+      document.getElementById(
+        "characterGroup"
+      );
+
+    const modalOverlay =
+      document.getElementById(
+        "modalOverlay"
+      );
+
+    const closeBtn =
+      document.getElementById(
+        "closeBtn"
+      );
+
+    const bgMusic =
+      document.getElementById(
+        "bgMusic"
+      );
+
+
+    /* =====================================================
+       AUDIO
+       ===================================================== */
+
+    bgMusic.volume = 0.4;
+
     function playAudio() {
-      bgMusic.play().catch(error => {
-        console.log("Esperando interacción para audio:", error);
-      });
+
+      bgMusic
+        .play()
+        .catch(() => {
+          console.log(
+            "Esperando interacción del usuario..."
+          );
+        });
+
     }
-    window.addEventListener('click', playAudio, { once: true });
 
-    // 1. Iniciar la secuencia: Amanecer (7s) -> Zoom a la cabaña
+
+    /*
+      En celular el navegador normalmente
+      bloquea el audio automático.
+
+      La primera interacción lo desbloquea.
+    */
+
+    window.addEventListener(
+      "pointerdown",
+      playAudio,
+      { once: true }
+    );
+
+
+    /* =====================================================
+       SECUENCIA PRINCIPAL
+       ===================================================== */
+
+    /*
+      1. Amanecer
+      2. Zoom
+      3. Personaje aparece
+    */
+
     setTimeout(() => {
-      canvasContainer.classList.add('zoomed');
 
-      // 2. Hacer salir al personaje caminando tras completarse el zoom
+      canvasContainer.classList.add(
+        "zoomed"
+      );
+
+
       setTimeout(() => {
-        characterGroup.classList.add('visible');
+
+        characterGroup.classList.add(
+          "visible"
+        );
+
       }, 3200);
 
     }, 5000);
 
-    // 3. Abrir la carta al hacer clic en el personaje
-    characterGroup.addEventListener('click', () => {
-      modalOverlay.classList.add('active');
-    });
 
-    // 4. Al cerrar la carta, el personaje siembra las flores
-    closeBtn.addEventListener('click', () => {
-      modalOverlay.classList.remove('active');
-      setTimeout(() => {
-        characterGroup.classList.add('planting');
-      }, 400);
-    });
+    /* =====================================================
+       ABRIR CARTA
+       ===================================================== */
+
+    characterGroup.addEventListener(
+      "pointerup",
+      (event) => {
+
+        event.stopPropagation();
+
+        if (
+          !characterGroup.classList.contains(
+            "planting"
+          )
+        ) {
+
+          modalOverlay.classList.add(
+            "active"
+          );
+
+        }
+
+      }
+    );
+
+
+    /* =====================================================
+       CERRAR CARTA Y SEMBRAR
+       ===================================================== */
+
+    closeBtn.addEventListener(
+      "click",
+      () => {
+
+        modalOverlay.classList.remove(
+          "active"
+        );
+
+
+        setTimeout(() => {
+
+          characterGroup.classList.add(
+            "planting"
+          );
+
+        }, 400);
+
+      }
+    );
+
+
+    /* =====================================================
+       CERRAR TOCANDO FUERA DE LA CARTA
+       ===================================================== */
+
+    modalOverlay.addEventListener(
+      "click",
+      (event) => {
+
+        if (
+          event.target ===
+          modalOverlay
+        ) {
+
+          modalOverlay.classList.remove(
+            "active"
+          );
+
+        }
+
+      }
+    );
+
   </script>
 
 </body>
 </html>
+```
